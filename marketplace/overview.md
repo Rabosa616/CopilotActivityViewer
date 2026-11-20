@@ -5,6 +5,8 @@ See what GitHub Copilot and its sub-agents are doing, live, inside **Visual Stud
 
 Open it from **View > Other Windows > Copilot Activity** or **Tools > Copilot Activity**.
 
+![Copilot Activity window showing the agent tree, the filtered activity timeline and sub-agents running in parallel](images/MainScreen.png)
+
 ## Features
 
 - **Agent tree**: the main agent and every sub-agent (including nested ones) with status,

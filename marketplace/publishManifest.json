@@ -1,5 +1,11 @@
 {
   "$schema": "http://json.schemastore.org/vsix-publish",
+  "assetFiles": [
+    {
+      "pathOnDisk": "images/MainScreen.png",
+      "targetPath": "images/MainScreen.png"
+    }
+  ],
   "categories": [ "coding", "other" ],
   "identity": {
     "internalName": "CopilotActivityViewer"

@@ -8,6 +8,8 @@ Extension for **Visual Studio 2026** and **SQL Server Management Studio 22** tha
 **Copilot Activity** window (View > Other Windows > Copilot Activity, or Tools > Copilot Activity)
 to see, live, what the GitHub Copilot agent and its sub-agents are doing.
 
+![Copilot Activity window showing the agent tree, the filtered activity timeline and sub-agents running in parallel](marketplace/images/MainScreen.png)
+
 - **Agents**: the main agent and its sub-agents (including nested ones), with status, model,
   tool count, tokens and duration.
 - **Timeline**: messages, tool calls (with arguments, result, duration and approvals), errors,
