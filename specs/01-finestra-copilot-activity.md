@@ -90,6 +90,19 @@ Estats d'una activitat: *Running*, *Approval* (esperant permís), *OK*, *Failed*
 - **Newest first** (per defecte): el més recent a dalt. Desmarcat: ordre cronològic.
 - Les activitats noves s'afegeixen sense perdre la selecció ni el desplaçament.
 
+### Llista limitada
+
+Cada fila visible és un objecte que Remote UI envia a l'IDE. Per això, en sessions llargues
+(milers d'esdeveniments), enviar-les totes alentia molt l'obertura de la finestra.
+
+- Només es llisten les **250 activitats més recents** que compleixen els filtres, tant amb
+  *Newest first* com en ordre cronològic.
+- El recompte ho indica: `2318 events · latest 250 shown`.
+- El botó **Show N older** (només visible si n'hi ha d'amagades) n'afegeix 500 més sense
+  substituir la llista.
+- Els filtres i la cerca sempre treballen sobre **tota** la sessió. En canviar un filtre o de
+  sessió, el límit torna a 250.
+
 ### Filtres
 
 Tots es combinen (I lògic). El text `n of m` indica les activitats visibles respecte del total.
@@ -141,3 +154,8 @@ Desapareixen automàticament quan apareix una sessió.
    segueix la selecció. → `DetailsAndFiltersTests.NewEventsAreMergedNewestFirstAndDetailsFollowTheSelection`
 5. Les línies parcials i els caràcters multibyte partits no es processen fins que estan
    complets. → `EventLogAndCatalogTests.ReaderReturnsOnlyCompleteLinesIncludingSplitMultibyteCharacters`
+6. En una sessió de més de 250 activitats, només es llisten les 250 més recents. La cerca
+   troba activitats antigues, i *Show older* afegeix les anteriors sense refer la llista i es
+   manté amb les actualitzacions en directe. →
+   `DetailsAndFiltersTests.LongSessionsListOnlyTheLatestActivityUntilOlderIsRequested`
+7. Verificació manual: la finestra s'obre ràpidament amb una sessió de més de 10 MB.

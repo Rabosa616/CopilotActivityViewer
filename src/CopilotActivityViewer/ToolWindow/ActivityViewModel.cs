@@ -13,6 +13,12 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
 {
     private const int ScanEveryTicks = 5;
     private const int ResetThreshold = 200;
+
+    /// <summary>
+    /// Every visible activity is a Remote UI proxy object marshalled to the IDE, so long sessions (thousands of events) made
+    /// the window slow to open. Only the most recent matches are shown; older ones are added on request.
+    /// </summary>
+    internal const int PageSize = 250;
     private const string NoSessionsPrefix = "No Copilot agent sessions";
     private static readonly TimeSpan FollowSwitchIdleThreshold = TimeSpan.FromSeconds(15);
 
@@ -40,6 +46,8 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
     private string summaryColor = Palette.Neutral;
     private string summaryToolTip;
     private string countText = string.Empty;
+    private int visibleLimit = PageSize;
+    private int hiddenCount;
     private XamlFragment details;
 
     public ActivityViewModel(SessionCatalog catalog)
@@ -70,6 +78,7 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
         SoloKindCommand = new AsyncCommand((parameter, _) => EnqueueAsync(() => SoloKind(FindKind(parameter))));
         ClearFiltersCommand = new AsyncCommand((_, _) => EnqueueAsync(ResetFilters));
         CopyDetailsCommand = new AsyncCommand((_, _) => EnqueueAsync(CopyDetails));
+        ShowOlderCommand = new AsyncCommand((_, _) => EnqueueAsync(ShowOlder));
     }
 
     [DataMember]
@@ -240,6 +249,27 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
         private set => Set(ref countText, value);
     }
 
+    /// <summary>Matching activities that are not in <see cref="Activities"/> because only the most recent ones are shown.</summary>
+    [DataMember]
+    public int HiddenCount
+    {
+        get => hiddenCount;
+        private set
+        {
+            if (Set(ref hiddenCount, value))
+            {
+                Raise(nameof(HasHiddenActivities));
+                Raise(nameof(ShowOlderText));
+            }
+        }
+    }
+
+    [DataMember]
+    public bool HasHiddenActivities => hiddenCount > 0;
+
+    [DataMember]
+    public string ShowOlderText => "Show " + Math.Min(hiddenCount, PageSize * 2) + " older";
+
     [DataMember]
     public ActivityItem SelectedActivity
     {
@@ -295,6 +325,9 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
 
     [DataMember]
     public IAsyncCommand CopyDetailsCommand { get; }
+
+    [DataMember]
+    public IAsyncCommand ShowOlderCommand { get; }
 
     internal SessionModel Model => model;
 
@@ -467,6 +500,7 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
     private void LoadSession(SessionInfo session)
     {
         reader = null;
+        visibleLimit = PageSize;
         if (selectedActivity != null)
         {
             selectedActivity = null;
@@ -671,8 +705,18 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
 
     private void OnFiltersChanged()
     {
+        visibleLimit = PageSize;
         Raise(nameof(HasActiveFilters));
         SyncVisible(reset: true);
+    }
+
+    internal void ShowOlder()
+    {
+        if (hiddenCount > 0)
+        {
+            visibleLimit += PageSize * 2;
+            SyncVisible(reset: false);
+        }
     }
 
     private void UpdateKindCounts()
@@ -738,6 +782,12 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
             }
         }
 
+        var matched = desired.Count;
+        if (matched > visibleLimit)
+        {
+            desired.RemoveRange(0, matched - visibleLimit);
+        }
+
         if (newestFirst)
         {
             desired.Reverse();
@@ -749,7 +799,9 @@ internal sealed class ActivityViewModel : ObservableObject, IDisposable
             Activities.AddRange(desired);
         }
 
-        CountText = desired.Count == total ? total + " events" : desired.Count + " of " + total + " events";
+        HiddenCount = matched - desired.Count;
+        CountText = (matched == total ? total + " events" : matched + " of " + total + " events") +
+            (hiddenCount > 0 ? " · latest " + desired.Count + " shown" : string.Empty);
         if (selectedActivity != null && !desired.Contains(selectedActivity))
         {
             selectedActivity = null;

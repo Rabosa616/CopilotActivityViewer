@@ -11,7 +11,8 @@ per veure en directe què fa l'agent de GitHub Copilot i els seus sub-agents.
   tokens i durada.
 - **Línia de temps**: missatges, crides a eines (amb arguments, resultat, durada i
   aprovacions), errors, avisos, skills, compactacions i `task_complete`. Per defecte les més
-  recents surten a dalt (*Newest first*).
+  recents surten a dalt (*Newest first*). Per obrir ràpidament les sessions llargues, només es
+  llisten les 250 activitats més recents; el botó *Show older* en carrega més.
 - **Filtres**:
   - per tipus (AI, Tool, User, Sub-agent, Skill, Warning, Error…) amb xips de colors que mostren
     el recompte. Clic per amagar o mostrar el tipus; clic dret per veure només aquell tipus.

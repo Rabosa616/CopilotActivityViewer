@@ -136,6 +136,18 @@
                 <DockPanel Grid.Row="0" Margin="0,0,0,4">
                     <TextBlock DockPanel.Dock="Left" Text="Activity" FontWeight="SemiBold" VerticalAlignment="Center" Margin="2,0,6,0" />
                     <TextBlock DockPanel.Dock="Left" Text="{Binding CountText}" VerticalAlignment="Center" Margin="0,0,10,0" Style="{StaticResource MutedText}" />
+                    <Button DockPanel.Dock="Left" Content="{Binding ShowOlderText}" Padding="8,1" Margin="0,0,10,0" Command="{Binding ShowOlderCommand}"
+                            ToolTip="Only the most recent activity is listed so the window stays fast; filters and search always cover the whole session">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ButtonStyleKey}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasHiddenActivities}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                     <CheckBox DockPanel.Dock="Right" Content="Newest first" IsChecked="{Binding NewestFirst}"
                               ToolTip="Show the most recent activity at the top of the list" />
                     <Button DockPanel.Dock="Right" Content="Clear filters" Padding="8,1" Margin="10,0,0,0"

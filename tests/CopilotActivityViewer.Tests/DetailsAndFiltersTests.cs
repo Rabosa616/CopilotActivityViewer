@@ -185,6 +185,48 @@ public class DetailsAndFiltersTests
         StringAssert.Contains(vm.DetailsXaml, "Select an activity");
     }
 
+    [TestMethod]
+    public async Task LongSessionsListOnlyTheLatestActivityUntilOlderIsRequested()
+    {
+        const int tools = ActivityViewModel.PageSize * 2;
+        static string Tool(int i) =>
+            "{\"type\":\"tool.execution_start\",\"data\":{\"toolCallId\":\"c" + i + "\",\"toolName\":\"view\",\"arguments\":{\"path\":\"File" + i + ".cs\"}},\"timestamp\":\"2026-11-19T10:00:00.000Z\"}";
+
+        using var session = TempSession.Create(new[] { SessionEvents[0] }.Concat(Enumerable.Range(1, tools).Select(Tool)));
+        using var vm = new ActivityViewModel(session.Catalog);
+        await vm.InitializeAsync();
+
+        var total = tools + 1;
+        Assert.HasCount(ActivityViewModel.PageSize, vm.Activities);
+        Assert.AreEqual("c" + tools, vm.Activities[0].ToolCallId, "The most recent activity is listed first");
+        Assert.AreEqual(total - ActivityViewModel.PageSize, vm.HiddenCount);
+        Assert.IsTrue(vm.HasHiddenActivities);
+        Assert.AreEqual(total + " events · latest " + ActivityViewModel.PageSize + " shown", vm.CountText);
+
+        vm.NewestFirst = false;
+        await vm.WhenIdleAsync();
+        Assert.AreEqual("c" + tools, vm.Activities[^1].ToolCallId, "Oldest first still keeps the most recent activity");
+
+        vm.SearchText = "File1.cs";
+        await vm.WhenIdleAsync();
+        CollectionAssert.AreEqual(new[] { "c1" }, vm.Activities.Select(a => a.ToolCallId).ToArray(), "Filters cover the whole session");
+        Assert.IsFalse(vm.HasHiddenActivities);
+
+        vm.SearchText = string.Empty;
+        await vm.WhenIdleAsync();
+        var before = vm.Activities.ToList();
+        await vm.ShowOlderCommand.ExecuteAsync(null, null, CancellationToken.None);
+        Assert.HasCount(total, vm.Activities);
+        Assert.IsFalse(vm.HasHiddenActivities);
+        CollectionAssert.AreEqual(before, vm.Activities.Skip(total - before.Count).ToArray(), "Older rows are added without replacing the list");
+        Assert.AreEqual(ActivityKind.User, vm.Activities[0].Kind);
+        Assert.AreEqual(total + " events", vm.CountText);
+
+        session.Append([Tool(tools + 1)]);
+        await vm.PollAsync();
+        Assert.HasCount(total + 1, vm.Activities, "Showing older activity survives live updates");
+    }
+
     private static SessionModel Load()
     {
         var model = new SessionModel();
