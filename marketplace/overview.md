@@ -7,6 +7,10 @@ Open it from **View > Other Windows > Copilot Activity** or **Tools > Copilot Ac
 
 ![Copilot Activity window showing the agent tree, the filtered activity timeline and sub-agents running in parallel](images/MainScreen.png)
 
+Keep it docked next to the Copilot Chat to follow every step of the agent and its sub-agents:
+
+![Copilot Activity docked next to the Copilot Chat while the agent works with four sub-agents](images/MainScreenPlusChat.png)
+
 ## Features
 
 - **Agent tree**: the main agent and every sub-agent (including nested ones) with status,

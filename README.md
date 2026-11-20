@@ -10,6 +10,8 @@ to see, live, what the GitHub Copilot agent and its sub-agents are doing.
 
 ![Copilot Activity window showing the agent tree, the filtered activity timeline and sub-agents running in parallel](marketplace/images/MainScreen.png)
 
+![Copilot Activity docked next to the Copilot Chat while the agent works with four sub-agents](marketplace/images/MainScreenPlusChat.png)
+
 - **Agents**: the main agent and its sub-agents (including nested ones), with status, model,
   tool count, tokens and duration.
 - **Timeline**: messages, tool calls (with arguments, result, duration and approvals), errors,

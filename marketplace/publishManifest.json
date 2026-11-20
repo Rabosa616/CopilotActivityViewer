@@ -4,6 +4,10 @@
     {
       "pathOnDisk": "images/MainScreen.png",
       "targetPath": "images/MainScreen.png"
+    },
+    {
+      "pathOnDisk": "images/MainScreenPlusChat.png",
+      "targetPath": "images/MainScreenPlusChat.png"
     }
   ],
   "categories": [ "coding", "other" ],
