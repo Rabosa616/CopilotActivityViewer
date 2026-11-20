@@ -227,6 +227,39 @@ public class DetailsAndFiltersTests
         Assert.HasCount(total + 1, vm.Activities, "Showing older activity survives live updates");
     }
 
+    [TestMethod]
+    public void KeyValueTablesKeepValuesNextToTheirKeysOnOneLine()
+    {
+        const string Value = "76f4f5dc-5733-4394-8341-8074dd7535c4";
+        var model = new SessionModel();
+        model.Apply(SessionModel.ParseLine("{\"type\":\"tool.execution_start\",\"data\":{\"toolCallId\":\"r1\",\"toolName\":\"read_agent\",\"arguments\":{\"agent_id\":\"" + Value + "\"}},\"timestamp\":\"2026-11-19T10:00:03.000Z\"}"));
+        foreach (var line in SessionEvents.Skip(6).Take(2))
+        {
+            model.Apply(SessionModel.ParseLine(line));
+        }
+
+        var tool = model.Activities.Single(a => a.ToolCallId == "r1");
+        var started = model.Activities.Single(a => a.Kind == ActivityKind.Subagent);
+
+        LocalSessionsTests.RunSta(() =>
+        {
+            foreach (var (item, text) in new[] { (tool, Value), (started, "fixer") })
+            {
+                var viewer = new System.Windows.Controls.FlowDocumentScrollViewer { Document = Parse(DetailsXamlBuilder.Build(item)), Width = 860, Height = 400 };
+                viewer.Measure(new System.Windows.Size(860, 400));
+                viewer.Arrange(new System.Windows.Rect(0, 0, 860, 400));
+                viewer.UpdateLayout();
+                LocalSessionsTests.PumpUntil(() => false, TimeSpan.FromMilliseconds(100));
+
+                var run = Runs(viewer.Document).First(r => r.Text == text);
+                var first = run.ContentStart.GetPositionAtOffset(0, LogicalDirection.Forward).GetCharacterRect(LogicalDirection.Forward);
+                var last = run.ContentEnd.GetCharacterRect(LogicalDirection.Backward);
+                Assert.IsLessThan(320, first.Left, $"{item.Title}: value '{text}' starts too far from its key (x={first.Left})");
+                Assert.AreEqual(first.Top, last.Top, 1, $"{item.Title}: value '{text}' wraps onto several lines");
+            }
+        });
+    }
+
     private static SessionModel Load()
     {
         var model = new SessionModel();

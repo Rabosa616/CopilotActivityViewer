@@ -31,6 +31,8 @@ The text of each section is limited to 12,000 characters so the UI is never bloc
 - JSON arguments and results are pretty-printed.
 - Well-known arguments are shown as name and value (e.g. `command`, `path`, `description`); the
   rest as JSON.
+- Name/value tables (tool arguments, sub-agent Agent/Type/Model/Description) keep each value
+  next to its name and wrap it across the remaining width of the pane.
 
 ## Markdown
 
@@ -58,3 +60,5 @@ copies the raw text of the activity to the clipboard.
    from names, paths, tools and content. → `FormattingTests`
 4. Markdown (headings, lists, tables, blocks) is parsed into blocks and inlines. →
    `FormattingTests.MarkdownBlocksAndInlinesAreParsed`
+5. In name/value tables the value starts next to its name and a short value stays on one line. →
+   `DetailsAndFiltersTests.KeyValueTablesKeepValuesNextToTheirKeysOnOneLine`

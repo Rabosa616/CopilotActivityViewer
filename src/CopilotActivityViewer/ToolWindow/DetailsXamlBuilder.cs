@@ -335,7 +335,8 @@ public static class DetailsXamlBuilder
         }
 
         var keyWidth = Math.Min(Math.Max(rows.Max(r => r.Key.Length) * (FontSize * 0.62), 60), 200);
-        x.Raw($"<Table CellSpacing=\"0\" Margin=\"{Num(depth * 14)},2,0,2\"><Table.Columns><TableColumn Width=\"{Num(keyWidth + 12)}\"/><TableColumn Width=\"*\"/></Table.Columns><TableRowGroup>");
+        // Only the key column is declared: next to a fixed column, WPF turns Width="*" into a near-zero column.
+        x.Raw($"<Table CellSpacing=\"0\" Margin=\"{Num(depth * 14)},2,0,2\"><Table.Columns><TableColumn Width=\"{Num(keyWidth + 12)}\"/></Table.Columns><TableRowGroup>");
         foreach (var row in rows)
         {
             x.Raw("<TableRow><TableCell>");
