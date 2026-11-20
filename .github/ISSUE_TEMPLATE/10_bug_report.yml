@@ -1,0 +1,75 @@
+name: 🐞 Bug report
+description: Report something that does not work as expected in Copilot Activity Viewer.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please do **not** report security
+        vulnerabilities here; follow the [Security Policy](https://github.com/Rabosa616/CopilotActivityViewer/blob/master/SECURITY.md).
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered ([open issues](https://github.com/Rabosa616/CopilotActivityViewer/issues)).
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Describe the steps to reproduce the problem. If it is related to a specific Copilot
+        session, attach the relevant lines of its `events.jsonl` file (under
+        `%LOCALAPPDATA%\Microsoft\VisualStudio\CopilotCli\session-state`). Remove anything
+        private before sharing it.
+      placeholder: |
+        1. Open View > Other Windows > Copilot Activity
+        2. Ask Copilot to ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots of the tool window.
+    validations:
+      required: false
+  - type: dropdown
+    attributes:
+      label: Host
+      options:
+        - Visual Studio 2026
+        - SQL Server Management Studio 22
+        - Other
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Host version
+      description: Help > About (for example 18.12.1).
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Extension version
+      description: Extensions > Manage Extensions > Installed > Copilot Activity Viewer.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: Logs, exceptions from the Output window, links or anything that gives more context.
+    validations:
+      required: false

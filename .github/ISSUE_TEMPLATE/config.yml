@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/Rabosa616/CopilotActivityViewer/security/advisories/new
+    about: Please report security vulnerabilities privately, not in public issues.
+  - name: ⭐ Rate or review the extension
+    url: https://marketplace.visualstudio.com/items?itemName=OscarVaqueroVies.CopilotActivityViewer&ssr=false#review-details
+    about: Leave a rating or review on the Visual Studio Marketplace.

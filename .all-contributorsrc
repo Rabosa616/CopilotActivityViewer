@@ -1,0 +1,31 @@
+{
+  "projectName": "CopilotActivityViewer",
+  "projectOwner": "Rabosa616",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+	"README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "none",
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "badgeTemplate": "[![All Contributors](https://img.shields.io/badge/all_contributors-<%= contributors.length %>-orange.svg?style=flat-square)](#contributors)",
+  "contributors": [
+	{
+	  "login": "Rabosa616",
+	  "name": "Oscar Vaquero Viñes",
+	  "avatar_url": "https://avatars.githubusercontent.com/u/12774781?v=4",
+	  "profile": "https://github.com/Rabosa616",
+	  "contributions": [
+		"code",
+		"doc",
+		"design",
+		"ideas",
+		"maintenance",
+		"test"
+	  ]
+	}
+  ]
+}

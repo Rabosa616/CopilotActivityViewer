@@ -3,6 +3,10 @@
 [![CI](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml/badge.svg)](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Rabosa616/CopilotActivityViewer)](https://github.com/Rabosa616/CopilotActivityViewer/releases/latest)
 [![Visual Studio Marketplace](https://img.shields.io/badge/Visual%20Studio-Marketplace-5C2D91)](https://marketplace.visualstudio.com/items?itemName=OscarVaqueroVies.CopilotActivityViewer)
+[![License: MIT](https://img.shields.io/github/license/Rabosa616/CopilotActivityViewer)](LICENSE)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Extension for **Visual Studio 2026** and **SQL Server Management Studio 22** that adds the
 **Copilot Activity** window (View > Other Windows > Copilot Activity, or Tools > Copilot Activity)
@@ -135,8 +139,35 @@ for SSMS, install the `.vsix` from the release as described in [Install](#instal
 
 ## Contributing
 
-Issues and pull requests are welcome. All documentation, specs, code comments and UI text are
-in English.
+Issues and pull requests are welcome. Read the [Contributing guide](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md) before you start. All documentation, specs, code comments
+and UI text are in English.
+
+Please report security vulnerabilities privately, as described in the
+[Security Policy](SECURITY.md).
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Rabosa616"><img src="https://avatars.githubusercontent.com/u/12774781?v=4&size=100" width="100px" height="100px" alt="Oscar Vaquero Viñes"/><br /><sub><b>Oscar Vaquero Viñes</b></sub></a><br /><a href="https://github.com/Rabosa616/CopilotActivityViewer/commits?author=Rabosa616" title="Code">💻</a> <a href="https://github.com/Rabosa616/CopilotActivityViewer/commits?author=Rabosa616" title="Documentation">📖</a> <a href="#design-Rabosa616" title="Design">🎨</a> <a href="#ideas-Rabosa616" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-Rabosa616" title="Maintenance">🚧</a> <a href="https://github.com/Rabosa616/CopilotActivityViewer/commits?author=Rabosa616" title="Tests">⚠️</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors)
+specification. Contributions of any kind are welcome! See also [AUTHORS](AUTHORS.md).
 
 ## License
 

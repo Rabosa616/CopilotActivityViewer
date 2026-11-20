@@ -1,0 +1,50 @@
+name: 📐 Design proposal
+description: Propose a larger change that needs a new or updated spec in specs/.
+labels: ["design-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Design proposals describe a change before it is implemented. Once agreed, the proposal
+        becomes a spec in [`specs/`](https://github.com/Rabosa616/CopilotActivityViewer/tree/master/specs)
+        with acceptance criteria that are covered by tests.
+  - type: textarea
+    attributes:
+      label: Summary
+      description: Please provide a 1-paragraph summary of your proposal.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Motivation and goals
+      description: |
+        Why is this important? Which scenarios does it enable? Describe the experience in the
+        tool window, if possible with a mock-up.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: In scope
+      description: A list of the main goals of this proposal.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Out of scope
+      description: A list of the things this proposal will not address.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Acceptance criteria
+      description: Testable statements that describe when the change is done.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Risks / unknowns
+      description: |
+        For example: changes to the internal `events.jsonl` format, performance with long
+        sessions, Remote UI limitations or differences between Visual Studio and SSMS.
+    validations:
+      required: false
