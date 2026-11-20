@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml/badge.svg)](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Rabosa616/CopilotActivityViewer)](https://github.com/Rabosa616/CopilotActivityViewer/releases/latest)
+[![Visual Studio Marketplace](https://img.shields.io/badge/Visual%20Studio-Marketplace-5C2D91)](https://marketplace.visualstudio.com/items?itemName=OscarVaqueroVies.CopilotActivityViewer)
 
 Extension for **Visual Studio 2026** and **SQL Server Management Studio 22** that adds the
 **Copilot Activity** window (View > Other Windows > Copilot Activity, or Tools > Copilot Activity)
@@ -75,6 +76,11 @@ The package is written to `src\CopilotActivityViewer\bin\Release\net10.0-windows
 ## Install
 
 Requires Visual Studio 2026 18.12 or later, or SSMS 22.
+
+In Visual Studio, install it from Extensions > Manage Extensions (search for
+"Copilot Activity Viewer") or from the
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=OscarVaqueroVies.CopilotActivityViewer).
+To install the `.vsix` manually (for example in SSMS):
 
 1. If version 1.x (VSSDK) is installed, uninstall it first from
    Extensions > Manage Extensions.
