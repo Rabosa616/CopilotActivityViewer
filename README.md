@@ -3,119 +3,123 @@
 [![CI](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml/badge.svg)](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Rabosa616/CopilotActivityViewer)](https://github.com/Rabosa616/CopilotActivityViewer/releases/latest)
 
-Extensió per a **Visual Studio 2026** i **SQL Server Management Studio 22** que afegeix la
-finestra **Copilot Activity** (View > Other Windows > Copilot Activity, o Tools > Copilot Activity)
-per veure en directe què fa l'agent de GitHub Copilot i els seus sub-agents.
+Extension for **Visual Studio 2026** and **SQL Server Management Studio 22** that adds the
+**Copilot Activity** window (View > Other Windows > Copilot Activity, or Tools > Copilot Activity)
+to see, live, what the GitHub Copilot agent and its sub-agents are doing.
 
-- **Agents**: agent principal i sub-agents (també niats), amb estat, model, nombre d'eines,
-  tokens i durada.
-- **Línia de temps**: missatges, crides a eines (amb arguments, resultat, durada i
-  aprovacions), errors, avisos, skills, compactacions i `task_complete`. Per defecte les més
-  recents surten a dalt (*Newest first*). Per obrir ràpidament les sessions llargues, només es
-  llisten les 250 activitats més recents; el botó *Show older* en carrega més.
-- **Filtres**:
-  - per tipus (AI, Tool, User, Sub-agent, Skill, Warning, Error…) amb xips de colors que mostren
-    el recompte. Clic per amagar o mostrar el tipus; clic dret per veure només aquell tipus.
-  - per estat (OK, fallat/errors, en curs, cancel·lat).
-  - per agent, des del desplegable o des de la llista d'agents, incloent-hi o no els sub-agents.
-  - per text lliure, que també cerca dins dels arguments i dels resultats.
-  - el botó *Clear filters* ho restableix tot.
-- **Detall formatat**:
-  - scripts i codi amb ressaltat de sintaxi (PowerShell, bash, C#, Python, JS/TS, JSON,
+- **Agents**: the main agent and its sub-agents (including nested ones), with status, model,
+  tool count, tokens and duration.
+- **Timeline**: messages, tool calls (with arguments, result, duration and approvals), errors,
+  warnings, skills, compactions and `task_complete`. The most recent activity is shown on top by
+  default (*Newest first*). To open long sessions quickly, only the latest 250 activities are
+  listed; the *Show older* button loads more.
+- **Filters**:
+  - by kind (AI, Tool, User, Sub-agent, Skill, Warning, Error…) with colored chips showing the
+    count. Click to hide or show a kind; right-click to show only that kind.
+  - by status (OK, failed/errors, running, cancelled).
+  - by agent, from the drop-down or the agents list, with or without its sub-agents.
+  - by free text, which also searches inside arguments and results.
+  - the *Clear filters* button resets everything.
+- **Formatted details**:
+  - scripts and code with syntax highlighting (PowerShell, bash, C#, Python, JS/TS, JSON,
     XML/XAML, SQL, YAML, diff).
-  - el JSON es mostra indentat.
-  - els missatges de l'AI i dels sub-agents es mostren com a markdown (títols, llistes, taules,
-    blocs de codi).
-  - els errors surten en vermell.
-  - botó *Copy* per copiar el text cru.
+  - JSON is pretty-printed.
+  - messages from the AI and sub-agents are rendered as markdown (headings, lists, tables,
+    code blocks).
+  - errors are shown in red.
+  - a *Copy* button copies the raw text.
 
-Les especificacions funcionals de la finestra són a [`specs/`](specs/README.md).
+The functional specifications of the window are in [`specs/`](specs/README.md).
 
-## Una finestra per instància
+## One window per instance
 
-Totes les instàncies de Visual Studio i SSMS desen les sessions al mateix lloc, però cada
-finestra **només mostra les sessions de la seva pròpia instància**:
+Every Visual Studio and SSMS instance stores its sessions in the same place, but each window
+**only shows the sessions of its own instance**:
 
-1. l'extensió busca el procés `devenv.exe` / `Ssms.exe` que l'allotja;
-2. troba el `copilot.exe` que aquella instància ha arrencat i el seu directori de logs
-   (`--log-dir`);
-3. llegeix aquests logs incrementalment (també després de la rotació) per saber quines
-   sessions serveix.
+1. the extension finds the `devenv.exe` / `Ssms.exe` process that hosts it;
+2. it finds the `copilot.exe` started by that instance and its log directory (`--log-dir`);
+3. it reads those logs incrementally (also across log rotation) to learn which sessions that
+   instance serves.
 
-A dalt a la dreta es mostra la instància monitoritzada (p. ex. *This Visual Studio (PID 39400)*).
-Marca **All instances** per veure les sessions de totes les instàncies. Si encara no s'ha obert
-cap xat de Copilot en aquella instància, la finestra ho indica. Si no es poden identificar les
-sessions (per exemple, si Copilot canvia el format dels logs), es mostren totes.
+The monitored instance is shown at the top right (e.g. *This Visual Studio (PID 39400)*).
+Tick **All instances** to see the sessions of every instance. If no Copilot chat has been
+started in that instance yet, the window says so. If the sessions cannot be identified (for
+example, if Copilot changes its log format), all of them are shown.
 
-## Tecnologia
+## Technology
 
 - [VisualStudio.Extensibility](https://learn.microsoft.com/visualstudio/extensibility/visualstudio.extensibility/)
-  *out-of-process* sobre **.NET 10**. L'extensió s'executa fora del procés de l'IDE, de manera que
-  no el pot bloquejar ni fer-lo caure.
-- UI amb **Remote UI**: `ToolWindow\ActivityControl.xaml` (un `DataTemplate` sense code-behind)
-  enllaçat a `ActivityViewModel`. El detall es genera com a `FlowDocument` XAML
+  *out-of-process* on **.NET 10**. The extension runs outside the IDE process, so it cannot
+  block it or make it crash.
+- UI built with **Remote UI**: `ToolWindow\ActivityControl.xaml` (a `DataTemplate` without
+  code-behind) bound to `ActivityViewModel`. The details are generated as a XAML `FlowDocument`
   (`DetailsXamlBuilder`).
-- `System.Text.Json` per llegir els `events.jsonl`.
+- `System.Text.Json` to read the `events.jsonl` files.
 
-La finestra llegeix incrementalment els fitxers `events.jsonl` de
-`%LOCALAPPDATA%\Microsoft\VisualStudio\CopilotCli\session-state` (i també dels directoris
-equivalents d'SSMS, d'altres hosts i de `%USERPROFILE%\.copilot\session-state`). Aquest format és
-intern de Copilot i pot canviar; el lector ignora els esdeveniments i camps desconeguts.
+The window incrementally reads the `events.jsonl` files under
+`%LOCALAPPDATA%\Microsoft\VisualStudio\CopilotCli\session-state` (and the equivalent folders of
+SSMS, other hosts and `%USERPROFILE%\.copilot\session-state`). This format is internal to
+Copilot and may change; the reader ignores unknown events and fields. Nothing is sent anywhere.
 
-## Compilar i provar
+## Build and test
 
-Cal el SDK de .NET 10 o posterior:
+Requires the .NET 10 SDK or later:
 
 ```powershell
 dotnet build CopilotActivityViewer.slnx -c Release
 dotnet test CopilotActivityViewer.slnx -c Release --no-build
 ```
 
-El paquet queda a `src\CopilotActivityViewer\bin\Release\net10.0-windows8.0\CopilotActivityViewer.vsix`.
+The package is written to `src\CopilotActivityViewer\bin\Release\net10.0-windows8.0\CopilotActivityViewer.vsix`.
 
-## Instal·lar
+## Install
 
-Requereix Visual Studio 2026 18.12 o posterior, o SSMS 22.
+Requires Visual Studio 2026 18.12 or later, or SSMS 22.
 
-1. Si tens instal·lada la versió 1.x (VSSDK), desinstal·la-la primer des de
+1. If version 1.x (VSSDK) is installed, uninstall it first from
    Extensions > Manage Extensions.
-2. Tanca l'IDE i fes doble clic al `.vsix`. Per a SSMS també pots fer servir
+2. Close the IDE and double-click the `.vsix`. For SSMS you can also use
    `"C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\VSIXInstaller.exe" CopilotActivityViewer.vsix`.
 
-El `.vsix` de cada versió es pot descarregar de
+The `.vsix` of every version can be downloaded from
 [Releases](https://github.com/Rabosa616/CopilotActivityViewer/releases).
 
-## Publicar
+## Publishing
 
-Tot està automatitzat amb GitHub Actions:
+Everything is automated with GitHub Actions:
 
-- **CI** (`.github/workflows/ci.yml`): a cada *push* a `master` i a cada *pull request*
-  compila, executa els tests i deixa el `.vsix` com a artefacte.
-- **Release** (`.github/workflows/release.yml`): en pujar un tag `vX.Y.Z`, compila amb aquella
-  versió, executa els tests, crea la *release* de GitHub amb el `.vsix` i, si existeix el
-  secret `VS_MARKETPLACE_PAT`, el publica al Visual Studio Marketplace amb `VsixPublisher.exe`
-  (paquet NuGet `Microsoft.VSSDK.BuildTools`).
+- **CI** (`.github/workflows/ci.yml`): on every push to `master` and every pull request it
+  builds, runs the tests and uploads the `.vsix` as an artifact.
+- **Release** (`.github/workflows/release.yml`): when a `vX.Y.Z` tag is pushed, it builds that
+  version, runs the tests, creates the GitHub release with the `.vsix` and, if the
+  `VS_MARKETPLACE_PAT` secret exists, publishes it to the Visual Studio Marketplace with
+  `VsixPublisher.exe` (from the `Microsoft.VSSDK.BuildTools` NuGet package).
 
 ```powershell
 git tag v2.1.0
 git push origin v2.1.0
 ```
 
-Configuració inicial del Marketplace (una sola vegada):
+One-time Marketplace setup:
 
-1. Crea un *publisher* a <https://marketplace.visualstudio.com/manage> amb l'ID `rabosa616` i
-   el nom visible `Oscar Vaquero` (ha de coincidir amb `publisherName` de
-   `CopilotActivityViewerExtension.cs`; si tries uns altres valors, actualitza aquest fitxer i
+1. Create a *publisher* at <https://marketplace.visualstudio.com/manage> with the ID `rabosa616`
+   and the display name `Oscar Vaquero` (it must match `publisherName` in
+   `CopilotActivityViewerExtension.cs`; if you choose other values, update that file and
    `marketplace/publishManifest.json`).
-2. Crea un *Personal Access Token* a <https://dev.azure.com> amb **All accessible
-   organizations** i l'àmbit **Marketplace > Manage**.
-3. Desa'l com a secret del repositori:
+2. Create a *Personal Access Token* at <https://dev.azure.com> with **All accessible
+   organizations** and the **Marketplace > Manage** scope.
+3. Store it as a repository secret:
    `gh secret set VS_MARKETPLACE_PAT --repo Rabosa616/CopilotActivityViewer`.
 
-La fitxa del Marketplace es genera a partir de `marketplace/overview.md` i
-`marketplace/publishManifest.json`. El Marketplace publica l'extensió per a Visual Studio; per a
-SSMS, instal·la el `.vsix` de la *release* tal com s'explica a [Instal·lar](#installar).
+The Marketplace page is generated from `marketplace/overview.md` and
+`marketplace/publishManifest.json`. The Marketplace publishes the extension for Visual Studio;
+for SSMS, install the `.vsix` from the release as described in [Install](#install).
 
-## Llicència
+## Contributing
+
+Issues and pull requests are welcome. All documentation, specs, code comments and UI text are
+in English.
+
+## License
 
 [MIT](LICENSE)
