@@ -107,9 +107,17 @@ One-time Marketplace setup:
    `CopilotActivityViewerExtension.cs`; if you choose other values, update that file and
    `marketplace/publishManifest.json`).
 2. Create a *Personal Access Token* at <https://dev.azure.com> with **All accessible
-   organizations** and the **Marketplace > Manage** scope.
+   organizations** and the **Marketplace > Manage** scope. You need an Azure DevOps
+   organization to reach the token page (create one at <https://aex.dev.azure.com/me>).
+   Azure DevOps is retiring global PATs on 27 January 2027, so this token will stop working
+   on that date.
 3. Store it as a repository secret:
    `gh secret set VS_MARKETPLACE_PAT --repo Rabosa616/CopilotActivityViewer`.
+
+Without the secret, publish manually: download the `.vsix` from the GitHub release, open
+<https://marketplace.visualstudio.com/manage/publishers/oscarvaquerovies>, choose
+**New extension > Visual Studio** and upload it. To publish a later version, choose
+**Update** on the existing extension.
 
 The Marketplace page is generated from `marketplace/overview.md` and
 `marketplace/publishManifest.json`. The Marketplace publishes the extension for Visual Studio;
