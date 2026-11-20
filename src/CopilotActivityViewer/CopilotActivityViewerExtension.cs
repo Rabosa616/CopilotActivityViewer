@@ -13,8 +13,10 @@ internal sealed class CopilotActivityViewerExtension : Extension
             version: ExtensionAssemblyVersion,
             publisherName: "Oscar Vaquero Viñes",
             displayName: "Copilot Activity Viewer",
-            description: "Live view of what GitHub Copilot and its sub-agents are doing: agent tree, activity timeline with filters and formatted tool arguments and results. Works in Visual Studio 2026 and SQL Server Management Studio 22.")
+            description: "Live view of what GitHub Copilot and its sub-agents are doing: agent tree, filterable activity timeline and formatted tool calls. For Visual Studio 2026 and SSMS 22.")
         {
+            Icon = "Images\\Icon.png",
+            PreviewImage = "Images\\Preview.png",
             Tags = ["Copilot", "Agents", "AI", "SSMS"],
             MoreInfo = "https://github.com/Rabosa616/CopilotActivityViewer",
             DotnetTargetVersions = [DotnetTarget.Net10],

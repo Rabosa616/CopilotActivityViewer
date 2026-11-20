@@ -8,8 +8,12 @@
     <Nullable>disable</Nullable>
     <RootNamespace>CopilotActivityViewer</RootNamespace>
     <AssemblyName>CopilotActivityViewer</AssemblyName>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Images\Logo.svg" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="18.12.1603" />
@@ -20,6 +24,11 @@
     <!-- Remote UI: the XAML is sent to Visual Studio / SSMS and loaded there, it is not compiled. -->
     <EmbeddedResource Include="ToolWindow\ActivityControl.xaml" LogicalName="CopilotActivityViewer.ToolWindow.ActivityControl.xaml" />
     <Page Remove="ToolWindow\ActivityControl.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\Icon.png;Images\Preview.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Images\Logo.svg" />
   </ItemGroup>
 
   <ItemGroup>
