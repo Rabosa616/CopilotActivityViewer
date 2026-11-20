@@ -15,7 +15,8 @@ permissions:
   contents: write
 
 env:
-  VSSDK_BUILDTOOLS_VERSION: 18.12.1606
+  # 18.12.1606 ships a VsixPublisher.exe that fails to load Microsoft.Identity.Client 4.85.2.0.
+  VSSDK_BUILDTOOLS_VERSION: 18.11.1098
 
 jobs:
   release:
