@@ -42,7 +42,7 @@ namespace CopilotActivityViewer.Tests
             }
 
             CollectionAssert.AreEqual(new[] { "{\"b\":\"àé\"}" }, reader.ReadNewLines().ToArray());
-            Assert.AreEqual(0, reader.ReadNewLines().Count);
+            Assert.IsEmpty(reader.ReadNewLines());
             Assert.IsFalse(reader.WasReset);
 
             File.WriteAllText(path, "{}\n");
@@ -59,7 +59,7 @@ namespace CopilotActivityViewer.Tests
                 writer.Write("{\"x\":1}\n");
                 writer.Flush();
                 var reader = new EventLogReader(path);
-                Assert.AreEqual(1, reader.ReadNewLines().Count);
+                Assert.HasCount(1, reader.ReadNewLines());
             }
         }
 
@@ -85,14 +85,45 @@ namespace CopilotActivityViewer.Tests
             CollectionAssert.AreEqual(new[] { "newer", "older" }, sessions.Select(s => s.Id).ToArray());
             Assert.AreEqual("first line \"quoted\"", sessions[0].Title);
             Assert.AreEqual(@"D:\projects\Contoso.Shop", sessions[0].Cwd);
-            StringAssert.Contains(sessions[0].Display, "[Contoso.Shop] first line");
+            StringAssert.Contains(sessions[0].Display, "VS · [Contoso.Shop] first line");
+        }
+
+        [TestMethod]
+        public void DefaultRootsCoverVisualStudioSsmsOtherHostsAndCli()
+        {
+            var local = Path.Combine(tempRoot, "Microsoft");
+            Directory.CreateDirectory(Path.Combine(local, "VisualStudio", @"CopilotCli\session-state"));
+            Directory.CreateDirectory(Path.Combine(local, "SQL Server Management Studio", "22.0", @"CopilotCli\session-state"));
+            Directory.CreateDirectory(Path.Combine(local, "SomeHost", @"CopilotCli\session-state"));
+            Directory.CreateDirectory(Path.Combine(local, "Unrelated", "Cache"));
+
+            var roots = SessionCatalog.DefaultRoots(local, tempRoot).ToList();
+
+            Assert.AreEqual("VS", roots[0].Key);
+            Assert.AreEqual("CLI", roots[^1].Key);
+            CollectionAssert.AreEquivalent(
+                new[]
+                {
+                    "VS|" + Path.Combine(local, "VisualStudio", @"CopilotCli\session-state"),
+                    "SSMS|" + Path.Combine(local, "SSMS", @"CopilotCli\session-state"),
+                    "SomeHost|" + Path.Combine(local, "SomeHost", @"CopilotCli\session-state"),
+                    "SSMS|" + Path.Combine(local, "SQL Server Management Studio", "22.0", @"CopilotCli\session-state"),
+                    "CLI|" + Path.Combine(tempRoot, ".copilot", "session-state"),
+                },
+                roots.Select(r => r.Key + "|" + r.Value).ToArray());
+
+            var session = Path.Combine(local, "SQL Server Management Studio", "22.0", @"CopilotCli\session-state", "s1");
+            Directory.CreateDirectory(session);
+            File.WriteAllText(Path.Combine(session, SessionCatalog.EventsFileName), "{}\n");
+            var found = new SessionCatalog(() => SessionCatalog.DefaultRoots(local, tempRoot)).Discover();
+            Assert.AreEqual("SSMS", found.Single().Source);
         }
 
         [TestMethod]
         public void CatalogIgnoresMissingRoots()
         {
             var catalog = new SessionCatalog(new[] { new System.Collections.Generic.KeyValuePair<string, string>("VS", Path.Combine(tempRoot, "missing")) });
-            Assert.AreEqual(0, catalog.Discover().Count);
+            Assert.IsEmpty(catalog.Discover());
         }
     }
 }

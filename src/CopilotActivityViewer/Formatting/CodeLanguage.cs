@@ -1,6 +1,8 @@
 using System;
 using System.IO;
-using Newtonsoft.Json.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace CopilotActivityViewer.Formatting
 {
@@ -216,13 +218,20 @@ namespace CopilotActivityViewer.Formatting
 
             try
             {
-                formatted = JToken.Parse(text).ToString(Newtonsoft.Json.Formatting.Indented);
+                formatted = JsonNode.Parse(text, documentOptions: new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip })
+                    ?.ToJsonString(IndentedJson) ?? "null";
                 return true;
             }
-            catch (Newtonsoft.Json.JsonException)
+            catch (JsonException)
             {
                 return false;
             }
         }
+
+        private static readonly JsonSerializerOptions IndentedJson = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        };
     }
 }

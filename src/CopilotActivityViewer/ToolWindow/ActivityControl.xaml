@@ -1,0 +1,299 @@
+<DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:vs="http://schemas.microsoft.com/visualstudio/extensibility/2022/xaml"
+              xmlns:styles="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+              xmlns:colors="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0">
+    <!-- Remote UI: loaded by Visual Studio / SSMS and bound to ActivityViewModel. No code-behind and no converters: colors come as strings, visibility via DataTriggers. -->
+    <Grid x:Name="RootGrid"
+          Background="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
+          TextElement.Foreground="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowTextBrushKey}}"
+          TextElement.FontFamily="{DynamicResource {x:Static styles:VsFonts.EnvironmentFontFamilyKey}}"
+          TextElement.FontSize="{DynamicResource {x:Static styles:VsFonts.EnvironmentFontSizeKey}}">
+        <Grid.Resources>
+            <!-- Theme brushes also used by the details FlowDocument (DetailsXamlBuilder.Keys). -->
+            <SolidColorBrush x:Key="CavText" Color="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowTextColorKey}}" />
+            <SolidColorBrush x:Key="CavMuted" Color="{DynamicResource {x:Static colors:EnvironmentColors.SystemGrayTextColorKey}}" />
+            <SolidColorBrush x:Key="CavBorder" Color="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowBorderColorKey}}" />
+            <SolidColorBrush x:Key="CavAccent" Color="{DynamicResource {x:Static colors:EnvironmentColors.ControlLinkTextColorKey}}" />
+
+            <Style TargetType="Button" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ButtonStyleKey}}">
+                <Setter Property="Padding" Value="10,2" />
+                <Setter Property="MinWidth" Value="0" />
+            </Style>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.CheckBoxStyleKey}}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="10,0,0,0" />
+            </Style>
+            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ComboBoxStyleKey}}" />
+            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.TextBoxStyleKey}}" />
+            <Style TargetType="ListBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogListBoxStyleKey}}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowBorderBrushKey}}" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+                <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+            </Style>
+            <Style x:Key="MutedText" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static colors:EnvironmentColors.SystemGrayTextBrushKey}}" />
+            </Style>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Session selector -->
+        <DockPanel Grid.Row="0" Margin="6,6,6,2">
+            <TextBlock DockPanel.Dock="Left" Text="Session" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Button DockPanel.Dock="Right" Content="Refresh" Margin="8,0,0,0" Command="{Binding RefreshCommand}"
+                    IsEnabled="{Binding RefreshCommand.RunningCommandsCount.IsZero}" ToolTip="Reload the sessions and the selected session" />
+            <CheckBox DockPanel.Dock="Right" Content="Follow latest" IsChecked="{Binding FollowLatest}"
+                      ToolTip="Automatically switch to the session that is currently active" />
+            <CheckBox DockPanel.Dock="Right" Content="All instances" IsChecked="{Binding AllInstances}"
+                      ToolTip="Also show the sessions of the other Visual Studio / SSMS instances (by default only this instance's sessions are shown)">
+                <CheckBox.Style>
+                    <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.CheckBoxStyleKey}}">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="Margin" Value="10,0,0,0" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasScope}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </CheckBox.Style>
+            </CheckBox>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding ScopeText}" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource MutedText}"
+                       ToolTip="Only the Copilot sessions of this IDE instance are monitored" />
+            <ComboBox ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}" DisplayMemberPath="Display"
+                      ToolTip="{Binding SelectedSession.EventsPath}" />
+        </DockPanel>
+
+        <!-- Summary -->
+        <Border Grid.Row="1" Margin="6,4,6,6" Padding="6,4" BorderThickness="1" CornerRadius="2"
+                BorderBrush="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowBorderBrushKey}}">
+            <DockPanel>
+                <Ellipse DockPanel.Dock="Left" Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center" Fill="{Binding SummaryColor}" />
+                <TextBlock Text="{Binding Summary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding SummaryToolTip}" />
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="6,0,6,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" MinWidth="160" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" MinWidth="250" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Agents (indented by depth) -->
+            <DockPanel Grid.Column="0">
+                <TextBlock DockPanel.Dock="Top" Text="Agents" FontWeight="SemiBold" Margin="2,0,0,4" />
+                <ListBox ItemsSource="{Binding Agents}" SelectedItem="{Binding SelectedAgent}"
+                         ToolTip="Select an agent to show only its activity">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="{Binding IndentMargin}" ToolTip="{Binding Description}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="9" Height="9" Margin="0,0,6,0" VerticalAlignment="Center" Fill="{Binding StatusColor}" />
+                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding StatusText}" Margin="6,0,0,0" Style="{StaticResource MutedText}" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding Subtitle}" Margin="15,1,0,0" FontSize="11" Style="{StaticResource MutedText}" />
+                                <TextBlock Text="{Binding Stats}" Margin="15,1,0,0" FontSize="11" Style="{StaticResource MutedText}" />
+                                <TextBlock Text="{Binding CurrentActivity}" Margin="15,1,0,0" FontSize="11" FontStyle="Italic"
+                                           TextTrimming="CharacterEllipsis" Foreground="#3B8EEA">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCurrentActivity}" Value="False">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="Transparent" />
+
+            <!-- Activity timeline -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="80" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="280" MinHeight="60" />
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                    <TextBlock DockPanel.Dock="Left" Text="Activity" FontWeight="SemiBold" VerticalAlignment="Center" Margin="2,0,6,0" />
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding CountText}" VerticalAlignment="Center" Margin="0,0,10,0" Style="{StaticResource MutedText}" />
+                    <CheckBox DockPanel.Dock="Right" Content="Newest first" IsChecked="{Binding NewestFirst}"
+                              ToolTip="Show the most recent activity at the top of the list" />
+                    <Button DockPanel.Dock="Right" Content="Clear filters" Padding="8,1" Margin="10,0,0,0"
+                            Command="{Binding ClearFiltersCommand}" IsEnabled="{Binding HasActiveFilters}" />
+                    <CheckBox DockPanel.Dock="Right" Content="Include sub-agents" IsChecked="{Binding IncludeSubagents}"
+                              ToolTip="Show the activity of the selected agent and all the agents it started" />
+                    <ComboBox DockPanel.Dock="Right" Width="190" Margin="8,0,0,0" ItemsSource="{Binding Agents}" SelectedItem="{Binding SelectedAgent}"
+                              ToolTip="Show the activity of this agent">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="{Binding IndentMargin}">
+                                    <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center" Fill="{Binding StatusColor}" />
+                                    <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox DockPanel.Dock="Right" Width="120" Margin="8,0,0,0" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding SelectedStatus}"
+                              DisplayMemberPath="Label" ToolTip="Filter by result" />
+                    <Grid>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}" MinWidth="120" VerticalContentAlignment="Center" />
+                        <TextBlock Text="Search (also inside arguments and results)…" IsHitTestVisible="False" Margin="5,0,0,0" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" Opacity="0.6">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchText}" Value="">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </DockPanel>
+
+                <!-- Activity type chips: click toggles the type, right-click shows only that type -->
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding KindFilters}" Margin="0,0,0,2" Focusable="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.ToggleKindCommand, ElementName=RootGrid}" CommandParameter="{Binding}"
+                                    Margin="0,0,4,4" Padding="0" Cursor="Hand" Focusable="False"
+                                    ToolTip="Click: show/hide this type · Right-click: show only this type (again: show all)">
+                                <vs:ExtensibilityUICommands.EventHandlers>
+                                    <vs:EventHandlerCollection>
+                                        <vs:EventHandler Event="MouseRightButtonUp" Command="{Binding DataContext.SoloKindCommand, ElementName=RootGrid}" CommandParameter="{Binding}" />
+                                    </vs:EventHandlerCollection>
+                                </vs:ExtensibilityUICommands.EventHandlers>
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasItems}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Chip" CornerRadius="9" Padding="8,1,8,1" BorderThickness="1" BorderBrush="{Binding Color}" Background="Transparent">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock x:Name="ChipLabel" Text="{Binding Label}" FontSize="11" FontWeight="SemiBold" Opacity="0.6" />
+                                                <TextBlock x:Name="ChipCount" Text="{Binding Count}" FontSize="11" Margin="5,0,0,0" Opacity="0.5" />
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked}" Value="True">
+                                                <Setter TargetName="Chip" Property="Background" Value="{Binding Color}" />
+                                                <Setter TargetName="ChipLabel" Property="Foreground" Value="White" />
+                                                <Setter TargetName="ChipLabel" Property="Opacity" Value="1" />
+                                                <Setter TargetName="ChipCount" Property="Foreground" Value="White" />
+                                                <Setter TargetName="ChipCount" Property="Opacity" Value="0.85" />
+                                            </DataTrigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Chip" Property="BorderThickness" Value="2" />
+                                                <Setter TargetName="Chip" Property="Padding" Value="7,0,7,0" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ListBox Grid.Row="2" ItemsSource="{Binding Activities}" SelectedItem="{Binding SelectedActivity}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,1" ToolTip="{Binding Subtitle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="58" />
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="84" />
+                                    <ColumnDefinition Width="56" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding TimeText}" VerticalAlignment="Center" Style="{StaticResource MutedText}" />
+                                <Border Grid.Column="1" Background="{Binding KindColor}" CornerRadius="2" Padding="4,0"
+                                        Margin="0,0,6,0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding KindText}" Foreground="White" FontSize="10" FontWeight="SemiBold" />
+                                </Border>
+                                <TextBlock Grid.Column="2" Text="{Binding AgentLabel}" Opacity="0.85" Margin="0,0,6,0" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+                                    <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
+                                    <Run Text="{Binding Subtitle, Mode=OneWay}" Foreground="{DynamicResource {x:Static colors:EnvironmentColors.SystemGrayTextBrushKey}}" />
+                                </TextBlock>
+                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                                    <Ellipse Width="8" Height="8" Margin="0,0,5,0" Fill="{Binding StatusColor}" />
+                                    <TextBlock Text="{Binding StatusText}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="5" Text="{Binding DurationText}" TextAlignment="Right" VerticalAlignment="Center" Style="{StaticResource MutedText}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <GridSplitter Grid.Row="3" Height="6" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                <!-- Details: FlowDocument built by DetailsXamlBuilder (syntax highlighted code, markdown, tables) -->
+                <Border Grid.Row="4" BorderThickness="1" BorderBrush="{DynamicResource {x:Static colors:EnvironmentColors.ToolWindowBorderBrushKey}}">
+                    <Grid>
+                        <FlowDocumentScrollViewer Document="{Binding Details}" IsToolBarVisible="False" VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled" Focusable="True" />
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,20,0" Padding="8,1" Content="Copy"
+                                Command="{Binding CopyDetailsCommand}" ToolTip="Copy the raw details as text">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ButtonStyleKey}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasSelectedActivity}" Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <TextBlock Grid.ColumnSpan="3" Text="{Binding StatusMessage}" TextWrapping="Wrap" TextAlignment="Center"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8" IsHitTestVisible="False">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasStatusMessage}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+    </Grid>
+</DataTemplate>

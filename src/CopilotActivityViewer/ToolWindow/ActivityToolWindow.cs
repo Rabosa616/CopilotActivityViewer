@@ -1,32 +1,47 @@
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Shell;
+using CopilotActivityViewer.Model;
+using Microsoft.VisualStudio.Extensibility;
+using Microsoft.VisualStudio.Extensibility.ToolWindows;
+using Microsoft.VisualStudio.RpcContracts.RemoteUI;
 
-namespace CopilotActivityViewer.ToolWindow
+namespace CopilotActivityViewer.ToolWindow;
+
+[VisualStudioContribution]
+internal sealed class ActivityToolWindow : Microsoft.VisualStudio.Extensibility.ToolWindows.ToolWindow
 {
-    [Guid(PackageGuids.ToolWindowString)]
-    public sealed class ActivityToolWindow : ToolWindowPane
+    private ActivityViewModel viewModel;
+    private ActivityControl content;
+
+    public ActivityToolWindow()
     {
-        private readonly ActivityToolWindowControl control;
+        Title = "Copilot Activity";
+    }
 
-        public ActivityToolWindow()
-            : base(null)
+    public override ToolWindowConfiguration ToolWindowConfiguration => new()
+    {
+        Placement = ToolWindowPlacement.DocumentWell,
+        AllowAutoCreation = true,
+    };
+
+    public override Task<IRemoteUserControl> GetContentAsync(CancellationToken cancellationToken)
+    {
+        if (content == null)
         {
-            Caption = "Copilot Activity";
-            BitmapImageMoniker = KnownMonikers.Activity;
-            control = new ActivityToolWindowControl();
-            Content = control;
+            viewModel = new ActivityViewModel(SessionCatalog.CreateDefault());
+            viewModel.Start();
+            content = new ActivityControl(viewModel);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                control.Dispose();
-            }
+        return Task.FromResult<IRemoteUserControl>(content);
+    }
 
-            base.Dispose(disposing);
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            viewModel?.Dispose();
+            content?.Dispose();
         }
+
+        base.Dispose(disposing);
     }
 }

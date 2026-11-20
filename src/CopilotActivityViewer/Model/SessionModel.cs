@@ -5,9 +5,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace CopilotActivityViewer.Model
 {
@@ -20,6 +21,8 @@ namespace CopilotActivityViewer.Model
         internal const int MaxDetailLength = 12000;
 
         private static readonly Regex TagRegex = new Regex("<[^>]+>", RegexOptions.Compiled);
+
+        internal static readonly JsonSerializerOptions CompactJson = new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
         private readonly Dictionary<string, AgentNode> agents = new Dictionary<string, AgentNode>(StringComparer.Ordinal);
         private readonly Dictionary<string, ActivityItem> toolItems = new Dictionary<string, ActivityItem>(StringComparer.Ordinal);
@@ -87,7 +90,7 @@ namespace CopilotActivityViewer.Model
         public AgentNode FindAgent(string agentId) =>
             agents.TryGetValue(agentId ?? string.Empty, out var agent) ? agent : null;
 
-        public static JObject ParseLine(string line)
+        public static JsonObject ParseLine(string line)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
@@ -96,10 +99,7 @@ namespace CopilotActivityViewer.Model
 
             try
             {
-                using (var reader = new JsonTextReader(new StringReader(line)) { DateParseHandling = DateParseHandling.None })
-                {
-                    return JObject.Load(reader);
-                }
+                return JsonNode.Parse(line) as JsonObject;
             }
             catch (JsonException)
             {
@@ -116,7 +116,7 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        public void Apply(JObject e)
+        public void Apply(JsonObject e)
         {
             if (e == null)
             {
@@ -125,7 +125,7 @@ namespace CopilotActivityViewer.Model
 
             EventCount++;
             var type = Str(e, "type") ?? string.Empty;
-            var data = e["data"] as JObject ?? new JObject();
+            var data = e["data"] as JsonObject ?? new JsonObject();
             var agentId = Str(e, "agentId") ?? string.Empty;
             var timestamp = ParseTime(Str(e, "timestamp")) ?? LastEventTime ?? DateTimeOffset.UtcNow;
             LastEventTime = timestamp;
@@ -316,7 +316,7 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        private void OnUserMessage(DateTimeOffset timestamp, AgentNode agent, JObject data)
+        private void OnUserMessage(DateTimeOffset timestamp, AgentNode agent, JsonObject data)
         {
             var content = Str(data, "content");
             AddActivity(timestamp, agent, ActivityKind.User, agent.IsMain ? "User" : "Prompt", TextFormat.FirstLine(content, 240), content);
@@ -338,9 +338,9 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        private void OnAssistantMessage(DateTimeOffset timestamp, AgentNode agent, JObject data)
+        private void OnAssistantMessage(DateTimeOffset timestamp, AgentNode agent, JsonObject data)
         {
-            var requests = data["toolRequests"] as JArray;
+            var requests = data["toolRequests"] as JsonArray;
             agent.LastMessageHadToolRequests = requests != null && requests.Count > 0;
             var content = Str(data, "content");
             if (!string.IsNullOrWhiteSpace(content))
@@ -358,11 +358,11 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        private void OnToolStart(DateTimeOffset timestamp, AgentNode agent, JObject data)
+        private void OnToolStart(DateTimeOffset timestamp, AgentNode agent, JsonObject data)
         {
             var toolCallId = Str(data, "toolCallId");
             var toolName = Str(data, "toolName") ?? "tool";
-            var args = data["arguments"] as JObject;
+            var args = data["arguments"] as JsonObject;
             var title = Str(data, "toolTitle");
             if (string.IsNullOrEmpty(title))
             {
@@ -394,7 +394,7 @@ namespace CopilotActivityViewer.Model
             agent.CurrentActivity = string.IsNullOrEmpty(item.Subtitle) ? title : title + ": " + item.Subtitle;
         }
 
-        private void OnPermissionRequested(JObject data)
+        private void OnPermissionRequested(JsonObject data)
         {
             var toolCallId = Str(data, "permissionRequest.toolCallId") ?? Str(data, "promptRequest.toolCallId");
             if (toolCallId != null && toolItems.TryGetValue(toolCallId, out var item) && item.Status == ActivityStatus.Running)
@@ -403,7 +403,7 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        private void OnPermissionCompleted(JObject data)
+        private void OnPermissionCompleted(JsonObject data)
         {
             var toolCallId = Str(data, "toolCallId");
             if (toolCallId == null || !toolItems.TryGetValue(toolCallId, out var item) || item.Status != ActivityStatus.AwaitingApproval)
@@ -423,7 +423,7 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        private void OnToolComplete(DateTimeOffset timestamp, JObject data)
+        private void OnToolComplete(DateTimeOffset timestamp, JsonObject data)
         {
             var toolCallId = Str(data, "toolCallId");
             if (toolCallId == null || !toolItems.TryGetValue(toolCallId, out var item))
@@ -431,7 +431,7 @@ namespace CopilotActivityViewer.Model
                 return;
             }
 
-            var success = data.SelectToken("success")?.Type == JTokenType.Boolean ? (bool)data["success"] : true;
+            var success = Kind(data["success"]) != JsonValueKind.False;
             var resultText = Str(data, "result.content") ?? Str(data, "error.message") ?? Str(data, "error");
             if (!string.IsNullOrEmpty(resultText))
             {
@@ -445,7 +445,7 @@ namespace CopilotActivityViewer.Model
             CompleteItem(item, timestamp, success ? ActivityStatus.Succeeded : ActivityStatus.Failed);
         }
 
-        private void OnSubagentStarted(DateTimeOffset timestamp, string agentId, JObject data)
+        private void OnSubagentStarted(DateTimeOffset timestamp, string agentId, JsonObject data)
         {
             if (string.IsNullOrEmpty(agentId))
             {
@@ -502,7 +502,7 @@ namespace CopilotActivityViewer.Model
             };
         }
 
-        private void OnSubagentFinished(DateTimeOffset timestamp, string agentId, JObject data, bool failed)
+        private void OnSubagentFinished(DateTimeOffset timestamp, string agentId, JsonObject data, bool failed)
         {
             if (string.IsNullOrEmpty(agentId))
             {
@@ -529,7 +529,7 @@ namespace CopilotActivityViewer.Model
                 error);
         }
 
-        private void OnAbort(DateTimeOffset timestamp, AgentNode agent, JObject data)
+        private void OnAbort(DateTimeOffset timestamp, AgentNode agent, JsonObject data)
         {
             agent.Status = AgentStatus.Aborted;
             agent.CurrentActivity = null;
@@ -542,7 +542,7 @@ namespace CopilotActivityViewer.Model
             AddActivity(timestamp, agent, ActivityKind.Warning, "Aborted", Str(data, "reason"), null);
         }
 
-        private void OnUsage(AgentNode agent, JObject data)
+        private void OnUsage(AgentNode agent, JsonObject data)
         {
             var input = Long(data, "usage.inputTokens");
             var output = Long(data, "usage.outputTokens");
@@ -617,7 +617,7 @@ namespace CopilotActivityViewer.Model
             }
         }
 
-        internal static string SummarizeArguments(string toolName, JObject args)
+        internal static string SummarizeArguments(string toolName, JsonObject args)
         {
             if (args == null)
             {
@@ -647,53 +647,68 @@ namespace CopilotActivityViewer.Model
                 }
             }
 
-            var first = args.Properties().FirstOrDefault(p => p.Value.Type == JTokenType.String);
-            return first != null ? TextFormat.FirstLine(first.Name + ": " + (string)first.Value, 200) : string.Empty;
+            var first = args.FirstOrDefault(p => Kind(p.Value) == JsonValueKind.String);
+            return first.Key != null ? TextFormat.FirstLine(first.Key + ": " + first.Value.GetValue<string>(), 200) : string.Empty;
         }
 
-        internal static string FormatArguments(JObject args)
+        internal static string FormatArguments(JsonObject args)
         {
-            if (args == null || !args.HasValues)
+            if (args == null || args.Count == 0)
             {
                 return string.Empty;
             }
 
             var sb = new StringBuilder();
-            foreach (var property in args.Properties())
+            foreach (var property in args)
             {
-                if (property.Value.Type == JTokenType.String)
+                if (Kind(property.Value) == JsonValueKind.String)
                 {
-                    var value = (string)property.Value;
+                    var value = property.Value.GetValue<string>();
                     if (value.IndexOf('\n') >= 0)
                     {
-                        sb.Append(property.Name).AppendLine(":").AppendLine(value.TrimEnd());
+                        sb.Append(property.Key).AppendLine(":").AppendLine(value.TrimEnd());
                     }
                     else
                     {
-                        sb.Append(property.Name).Append(": ").AppendLine(value);
+                        sb.Append(property.Key).Append(": ").AppendLine(value);
                     }
                 }
                 else
                 {
-                    sb.Append(property.Name).Append(": ").AppendLine(property.Value.ToString(Newtonsoft.Json.Formatting.None));
+                    sb.Append(property.Key).Append(": ").AppendLine(property.Value?.ToJsonString(CompactJson) ?? "null");
                 }
             }
 
             return TextFormat.Truncate(sb.ToString().TrimEnd(), MaxDetailLength / 2);
         }
 
-        private static string Str(JToken token, string path)
+        internal static JsonValueKind Kind(JsonNode node) => node?.GetValueKind() ?? JsonValueKind.Null;
+
+        /// <summary>Reads a value by dotted path ("result.content") as text; objects and arrays are returned as compact JSON.</summary>
+        internal static string Str(JsonNode node, string path)
         {
-            var value = token?.SelectToken(path);
-            if (value == null || value.Type == JTokenType.Null || value.Type == JTokenType.Undefined)
+            var value = node;
+            foreach (var segment in path.Split('.'))
             {
-                return null;
+                value = value is JsonObject obj && obj.TryGetPropertyValue(segment, out var child) ? child : null;
+                if (value == null)
+                {
+                    return null;
+                }
             }
 
-            return value.Type == JTokenType.String || value is JValue ? value.ToString() : value.ToString(Newtonsoft.Json.Formatting.None);
+            switch (Kind(value))
+            {
+                case JsonValueKind.String: return value.GetValue<string>();
+                case JsonValueKind.Null:
+                case JsonValueKind.Undefined: return null;
+                case JsonValueKind.True: return "True";
+                case JsonValueKind.False: return "False";
+                default: return value.ToJsonString(CompactJson);
+            }
         }
 
-        private static long Long(JToken token, string path) =>
+        private static long Long(JsonNode token, string path) =>
             long.TryParse(Str(token, path), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         private static DateTimeOffset? ParseTime(string value) =>

@@ -87,7 +87,7 @@ namespace CopilotActivityViewer.Tests
             Assert.AreEqual("Get-Item .", code.Text);
 
             var table = blocks.Single(b => b.Kind == MarkdownBlockKind.Table);
-            Assert.AreEqual(2, table.Rows.Count);
+            Assert.HasCount(2, table.Rows);
             CollectionAssert.AreEqual(new[] { "1", "2" }, table.Rows[1]);
             Assert.AreEqual(MarkdownBlockKind.Quote, blocks.Last().Kind);
 
@@ -102,7 +102,7 @@ namespace CopilotActivityViewer.Tests
         private static TokenKind Kind(System.Collections.Generic.IEnumerable<CodeToken> tokens, string text)
         {
             var match = tokens.Where(t => t.Text == text).ToList();
-            Assert.AreEqual(1, match.Count, "Token not found: " + text + " in " + string.Join(" | ", tokens));
+            Assert.HasCount(1, match, "Token not found: " + text + " in " + string.Join(" | ", tokens));
             return match[0].Kind;
         }
     }

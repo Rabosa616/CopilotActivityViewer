@@ -1,28 +1,32 @@
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 
-namespace CopilotActivityViewer.Model
+namespace CopilotActivityViewer.Model;
+
+/// <summary>
+/// Base class for Remote UI data: Visual Studio / SSMS mirrors every <see cref="DataMemberAttribute"/> property
+/// and listens to <see cref="PropertyChanged"/> to keep the remote copy in sync.
+/// </summary>
+[DataContract]
+public abstract class ObservableObject : INotifyPropertyChanged
 {
-    public abstract class ObservableObject : INotifyPropertyChanged
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected bool Set<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected bool Set<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        if (EqualityComparer<T>.Default.Equals(field, value))
         {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-            {
-                return false;
-            }
-
-            field = value;
-            Raise(propertyName);
-            return true;
+            return false;
         }
 
-        protected void Raise([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        field = value;
+        Raise(propertyName);
+        return true;
+    }
+
+    protected void Raise([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

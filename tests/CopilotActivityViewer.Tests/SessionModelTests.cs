@@ -117,14 +117,14 @@ namespace CopilotActivityViewer.Tests
             model.ApplyLine("{\"type\":\"something.new\",\"data\":{\"x\":1}}");
             model.ApplyLine("{\"type\":\"tool.execution_complete\",\"data\":{\"toolCallId\":\"missing\"}}");
 
-            Assert.AreEqual(0, model.Activities.Count);
+            Assert.IsEmpty(model.Activities);
             Assert.AreEqual(2, model.EventCount);
         }
 
         [TestMethod]
         public void SummarizesTaskArguments()
         {
-            var args = Newtonsoft.Json.Linq.JObject.Parse("{\"name\":\"fixer\",\"agent_type\":\"general-purpose\",\"description\":\"Fix it\"}");
+            var args = System.Text.Json.Nodes.JsonNode.Parse("{\"name\":\"fixer\",\"agent_type\":\"general-purpose\",\"description\":\"Fix it\"}").AsObject();
             Assert.AreEqual("fixer (general-purpose) — Fix it", SessionModel.SummarizeArguments("task", args));
         }
 

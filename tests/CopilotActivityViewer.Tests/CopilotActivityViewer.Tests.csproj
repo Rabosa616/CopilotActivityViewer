@@ -1,24 +1,38 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net10.0-windows8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
     <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD002;VSTHRD100;VSTHRD200</NoWarn>
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD002;VSTHRD103;VSTHRD110;VSTHRD200</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.11.1" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.11.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="17.14.40264" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.0.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CopilotActivityViewer\CopilotActivityViewer.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- WPF projects do not import System.IO implicitly (System.Windows.Shapes.Path clash). -->
+    <Using Include="System.IO" />
+    <!-- The tests share real session folders and STA rendering; run them sequentially. -->
+    <AssemblyAttribute Include="Microsoft.VisualStudio.TestTools.UnitTesting.DoNotParallelizeAttribute" />
+  </ItemGroup>
+
+  <!-- The extensibility SDK flows its extension manifest generator transitively; it only applies to the extension project. -->
+  <Target Name="RemoveExtensionManifestGenerator" AfterTargets="ResolveLockFileAnalyzers">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="'%(Filename)' == 'Microsoft.VisualStudio.Extensibility.JsonGenerators.Sdk'" />
+    </ItemGroup>
+  </Target>
 
 </Project>
