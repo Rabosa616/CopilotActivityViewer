@@ -1,0 +1,50 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>CopilotActivityViewer</RootNamespace>
+    <AssemblyName>CopilotActivityViewer</AssemblyName>
+    <Version>1.1.0</Version>
+    <!-- The tool window UI is plain WPF (testable outside VS): async void event handlers are guarded with try/catch. -->
+    <NoWarn>$(NoWarn);VSTHRD001;VSTHRD100</NoWarn>
+
+    <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <UseCodebase>true</UseCodebase>
+    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
+    <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>true</CopyOutputSymbolsToOutputDirectory>
+    <DeployExtension Condition="'$(BuildingInsideVisualStudio)' != 'true'">false</DeployExtension>
+
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix Exp</StartArguments>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.14.40265" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2142" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Design" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VSCTCompile Include="CopilotActivityViewerPackage.vsct" ResourceName="Menus.ctmenu" />
+    <None Include="source.extension.vsixmanifest" SubType="Designer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CopilotActivityViewer.Tests" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <!-- The VSSDK NuGet package only sets VSToolsPath; SDK-style projects must import the VSIX targets explicitly. -->
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
+
+</Project>
