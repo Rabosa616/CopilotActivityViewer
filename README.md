@@ -102,8 +102,8 @@ git push origin v2.1.0
 
 One-time Marketplace setup:
 
-1. Create a *publisher* at <https://marketplace.visualstudio.com/manage> with the ID `rabosa616`
-   and the display name `Oscar Vaquero` (it must match `publisherName` in
+1. Create a *publisher* at <https://marketplace.visualstudio.com/manage> with the ID `oscarvaquerovies`
+   and the display name `Oscar Vaquero Viñes` (it must match `publisherName` in
    `CopilotActivityViewerExtension.cs`; if you choose other values, update that file and
    `marketplace/publishManifest.json`).
 2. Create a *Personal Access Token* at <https://dev.azure.com> with **All accessible
