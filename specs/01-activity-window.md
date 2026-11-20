@@ -31,7 +31,8 @@ call, with which arguments and with which result.
 │   ● sub-agent  Idle   │ │ …                                                                │ │
 │     …                 │ └──────────────────────────────────────────────────────────────────┘ │
 │                       │ ═══════════════════ (resizable splitter) ═══════════════════         │
-│                       │ ┌ Formatted details ─────────────────────────────────────── [Copy] ┐ │
+│                       │ Details                                                       [Copy] │
+│                       │ ┌ Formatted details ──────────────────────────────────────────────┐ │
 │                       │ └──────────────────────────────────────────────────────────────────┘ │
 └───────────────────────┴──────────────────────────────────────────────────────────────────────┘
 ```
@@ -119,7 +120,11 @@ the total.
 ## Details
 
 Shows the selected activity formatted; see [02-formatted-details.md](02-formatted-details.md).
-With no selection it is empty and the **Copy** button is hidden.
+The pane has a **Details** header with the **Copy** button, so the button never covers the text.
+With no selection it shows "Select an activity to see its details." and **Copy** is hidden.
+
+The hint "Select an agent to show only its activity" is the tooltip of the **Agents** header, not of
+the whole list, so it does not float over the empty part of the list.
 
 ## Live refresh
 

@@ -126,6 +126,12 @@ public partial class LocalSessionsTests
                 Assert.IsGreaterThan(1, viewer.Document.Blocks.Count, "Details were not rendered for " + sample.Title);
                 Assert.AreEqual(vm.KindFilters.Count, Descendants<Button>(host).Count(b => b.DataContext is KindFilter), "Kind chips are not rendered");
 
+                Rect Bounds(FrameworkElement element) => element.TransformToAncestor(host).TransformBounds(new Rect(element.RenderSize));
+                var copyButton = Descendants<Button>(host).Single(b => Equals(b.Content, "Copy"));
+                Assert.AreEqual(Visibility.Visible, copyButton.Visibility, "Copy must be shown when an activity is selected");
+                Assert.IsFalse(Bounds(copyButton).IntersectsWith(Bounds(viewer)), "The Copy button must not cover the details text");
+                Assert.IsNull(lists[0].ToolTip, "A list-wide tooltip floats over the empty part of the agents list");
+
                 var bitmap = new RenderTargetBitmap(1500, 850, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(host);
                 var encoder = new PngBitmapEncoder();

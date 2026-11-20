@@ -45,8 +45,8 @@ highlighted code blocks.
 
 ## Copy
 
-The **Copy** button (top right of the details pane) copies the raw text of the activity to the
-clipboard.
+The **Copy** button (in the **Details** header, above the document, so it never covers the text)
+copies the raw text of the activity to the clipboard.
 
 ## Acceptance criteria
 
