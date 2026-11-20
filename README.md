@@ -1,5 +1,8 @@
 # Copilot Activity Viewer
 
+[![CI](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml/badge.svg)](https://github.com/Rabosa616/CopilotActivityViewer/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Rabosa616/CopilotActivityViewer)](https://github.com/Rabosa616/CopilotActivityViewer/releases/latest)
+
 Extensió per a **Visual Studio 2026** i **SQL Server Management Studio 22** que afegeix la
 finestra **Copilot Activity** (View > Other Windows > Copilot Activity, o Tools > Copilot Activity)
 per veure en directe què fa l'agent de GitHub Copilot i els seus sub-agents.
@@ -24,6 +27,8 @@ per veure en directe què fa l'agent de GitHub Copilot i els seus sub-agents.
     blocs de codi).
   - els errors surten en vermell.
   - botó *Copy* per copiar el text cru.
+
+Les especificacions funcionals de la finestra són a [`specs/`](specs/README.md).
 
 ## Una finestra per instància
 
@@ -75,3 +80,41 @@ Requereix Visual Studio 2026 18.12 o posterior, o SSMS 22.
    Extensions > Manage Extensions.
 2. Tanca l'IDE i fes doble clic al `.vsix`. Per a SSMS també pots fer servir
    `"C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\VSIXInstaller.exe" CopilotActivityViewer.vsix`.
+
+El `.vsix` de cada versió es pot descarregar de
+[Releases](https://github.com/Rabosa616/CopilotActivityViewer/releases).
+
+## Publicar
+
+Tot està automatitzat amb GitHub Actions:
+
+- **CI** (`.github/workflows/ci.yml`): a cada *push* a `master` i a cada *pull request*
+  compila, executa els tests i deixa el `.vsix` com a artefacte.
+- **Release** (`.github/workflows/release.yml`): en pujar un tag `vX.Y.Z`, compila amb aquella
+  versió, executa els tests, crea la *release* de GitHub amb el `.vsix` i, si existeix el
+  secret `VS_MARKETPLACE_PAT`, el publica al Visual Studio Marketplace amb `VsixPublisher.exe`
+  (paquet NuGet `Microsoft.VSSDK.BuildTools`).
+
+```powershell
+git tag v2.1.0
+git push origin v2.1.0
+```
+
+Configuració inicial del Marketplace (una sola vegada):
+
+1. Crea un *publisher* a <https://marketplace.visualstudio.com/manage> amb l'ID `rabosa616` i
+   el nom visible `Oscar Vaquero` (ha de coincidir amb `publisherName` de
+   `CopilotActivityViewerExtension.cs`; si tries uns altres valors, actualitza aquest fitxer i
+   `marketplace/publishManifest.json`).
+2. Crea un *Personal Access Token* a <https://dev.azure.com> amb **All accessible
+   organizations** i l'àmbit **Marketplace > Manage**.
+3. Desa'l com a secret del repositori:
+   `gh secret set VS_MARKETPLACE_PAT --repo Rabosa616/CopilotActivityViewer`.
+
+La fitxa del Marketplace es genera a partir de `marketplace/overview.md` i
+`marketplace/publishManifest.json`. El Marketplace publica l'extensió per a Visual Studio; per a
+SSMS, instal·la el `.vsix` de la *release* tal com s'explica a [Instal·lar](#installar).
+
+## Llicència
+
+[MIT](LICENSE)

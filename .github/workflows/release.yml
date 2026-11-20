@@ -1,0 +1,79 @@
+name: Release
+
+# Push a tag like v2.1.0 to build, test, create the GitHub release with the VSIX and,
+# when the VS_MARKETPLACE_PAT secret exists, publish it to the Visual Studio Marketplace.
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to release (e.g. v2.1.0)
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  VSSDK_BUILDTOOLS_VERSION: 18.12.1606
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      VS_MARKETPLACE_PAT: ${{ secrets.VS_MARKETPLACE_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version from tag
+        shell: pwsh
+        run: |
+          if ($env:TAG -notmatch '^v(\d+\.\d+\.\d+)$') { throw "Tag '$env:TAG' must look like v1.2.3" }
+          "VERSION=$($Matches[1])" >> $env:GITHUB_ENV
+
+      - name: Build
+        run: dotnet build CopilotActivityViewer.slnx -c Release -p:Version=${{ env.VERSION }}
+
+      - name: Test
+        run: dotnet test CopilotActivityViewer.slnx -c Release --no-build
+
+      - name: GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $vsix = 'src/CopilotActivityViewer/bin/Release/net10.0-windows8.0/CopilotActivityViewer.vsix'
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG $vsix --clobber
+          } else {
+            gh release create $env:TAG $vsix --title "Copilot Activity Viewer $env:VERSION" --generate-notes
+          }
+          if ($LASTEXITCODE -ne 0) { throw "gh release failed" }
+
+      - name: Publish to Visual Studio Marketplace
+        if: env.VS_MARKETPLACE_PAT != ''
+        shell: pwsh
+        run: |
+          $pkg = Join-Path $env:RUNNER_TEMP 'vssdk-buildtools'
+          $nupkg = "$pkg.zip"
+          Invoke-WebRequest "https://api.nuget.org/v3-flatcontainer/microsoft.vssdk.buildtools/$env:VSSDK_BUILDTOOLS_VERSION/microsoft.vssdk.buildtools.$env:VSSDK_BUILDTOOLS_VERSION.nupkg" -OutFile $nupkg
+          Expand-Archive $nupkg -DestinationPath $pkg -Force
+          $publisher = Get-ChildItem $pkg -Recurse -Filter VsixPublisher.exe | Where-Object { $_.Directory.Name -eq 'bin' } | Select-Object -First 1
+          if (-not $publisher) { throw 'VsixPublisher.exe not found' }
+          & $publisher.FullName publish `
+            -payload src/CopilotActivityViewer/bin/Release/net10.0-windows8.0/CopilotActivityViewer.vsix `
+            -publishManifest marketplace/publishManifest.json `
+            -personalAccessToken $env:VS_MARKETPLACE_PAT
+          if ($LASTEXITCODE -ne 0) { throw "VsixPublisher failed with exit code $LASTEXITCODE" }
+
+      - name: Marketplace skipped
+        if: env.VS_MARKETPLACE_PAT == ''
+        run: echo "::notice::VS_MARKETPLACE_PAT secret not set; skipped Visual Studio Marketplace publishing."
